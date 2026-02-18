@@ -8,6 +8,8 @@
 </p>
 <p align="center">
   <a href="/docs/LIVE_EVENTS_IMPLEMENTATION.md">New : Live Events Implementation</a> •
+  <a href="/docs/APPRISE_NOTIFICATIONS.md">New : Notification</a> •
+  <a href="https://github.com/luna-page/agent">Luna Agent</a> •
   <a href="https://github.com/luna-page/community-widgets">Community widgets</a> •
   <a href="docs/preconfigured-pages.md">Preconfigured pages</a> •
   <a href="docs/themes.md">Themes</a>
@@ -74,6 +76,8 @@ services:
       - ./config:/app/config:ro # add luna.yml to config folder
       # If you have custom assets (CSS/JS) that you want to test without rebuilding
       # - ./public:/app/public:ro
+      # Optionally, also mount docker socket if you want to use the docker containers widget
+      # - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - TZ=Etc/UTC
       - luna_CONFIG=/app/luna.yml

@@ -9,6 +9,7 @@
   - [Icons](#icons)
   - [Config schema](#config-schema)
 - [Authentication](#authentication)
+- [NEW: Notification Apprise](#notifications-apprise)
 - [Server](#server)
 - [Document](#document)
 - [Branding](#branding)
