@@ -1,0 +1,125 @@
+{{ template "document.html" . }}
+
+{{ define "document-title" }}{{ .Page.Title }}{{ end }}
+
+{{ define "document-head-after" }}
+<script type="module" src='{{ .App.StaticAssetPath "js/page.js" }}'></script>
+{{ end }}
+
+{{ define "navigation-links" }}
+{{ range .App.Config.Pages }}
+<a href="{{ $.App.Config.Server.BaseURL }}/{{ .Slug }}" class="nav-item{{ if eq .Slug $.Page.Slug }} nav-item-current{{ end }}"{{ if eq .Slug $.Page.Slug }} aria-current="page"{{ end }}>{{ .Title }}</a>
+{{ end }}
+{{ end }}
+
+{{ define "document-body" }}
+<div class="flex flex-column body-content">
+    {{ if not .Page.HideDesktopNavigation }}
+    <div class="header-container content-bounds{{ if .Page.DesktopNavigationWidth }} content-bounds-{{ .Page.DesktopNavigationWidth }} {{ end }}">
+        <div class="header flex padding-inline-widget widget-content-frame">
+            <div class="logo" aria-hidden="true">
+                {{- if .App.Config.Branding.LogoURL }}
+                <img src="{{ .App.Config.Branding.LogoURL }}" alt="">
+                {{- else if .App.Config.Branding.LogoText }}
+                {{- .App.Config.Branding.LogoText }}
+                {{- else }}
+                <svg style="max-height: 2rem;" width="100%" viewBox="0 0 542 590" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="51" height="590" fill="#393646"/>
+                    <rect x="20" width="231" height="51" fill="#393646"/>
+                    <rect width="457.216" height="46.2619" transform="matrix(-0.0045264 -0.99999 0.99999 -0.00449472 206.666 492.492)" fill="#393646"/>
+                    <rect width="501.971" height="46.4429" transform="matrix(-0.00290897 -0.999996 0.999996 -0.00287729 104.252 588.019)" fill="#6D5D6E"/>
+                    <rect width="391.632" height="42.9006" transform="matrix(0.999936 -0.0112927 0.0114171 0.999935 149.234 545.251)" fill="#6D5D6E"/>
+                    <rect width="181.395" height="46.4429" transform="matrix(-0.00290897 -0.999996 0.999996 -0.00287729 494.205 549.015)" fill="#6D5D6E"/>
+                    <rect x="496.75" y="413.869" width="184.965" height="46.1894" transform="rotate(-179.997 496.75 413.869)" fill="#6D5D6E"/>
+                    <rect x="436.374" y="492.391" width="184.965" height="46.1894" transform="rotate(-179.997 436.374 492.391)" fill="#393646"/>
+                </svg>
+                {{- end }}
+            </div>
+            <nav class="nav flex grow hide-scrollbars">
+                {{ template "navigation-links" . }}
+            </nav>
+            {{ if not .App.Config.Theme.DisablePicker }}
+            <div class="theme-picker self-center" data-popover-type="html" data-popover-position="below" data-popover-show-delay="0">
+                <div class="current-theme-preview">
+                    {{ .Request.Theme.PreviewHTML }}
+                </div>
+                <div data-popover-html>
+                    <div class="theme-choices"></div>
+                </div>
+            </div>
+            {{ end }}
+            {{- if .App.RequiresAuth }}
+            <a class="block self-center" href="{{ .App.Config.Server.BaseURL }}/logout" title="Logout">
+                <svg class="logout-button" stroke="var(--color-text-subdue)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                </svg>
+            </a>
+            {{- end }}
+        </div>
+    </div>
+    {{ end }}
+
+    <div class="mobile-navigation">
+        <div class="mobile-navigation-icons">
+            <a class="mobile-navigation-label" href="#top">↑</a>
+            {{ range $i, $column := .Page.Columns }}
+            <label class="mobile-navigation-label"><input type="radio" class="mobile-navigation-input" name="column" value="{{ $i }}" autocomplete="off"{{ if eq $i $.Page.PrimaryColumnIndex }} checked{{ end }}><div class="mobile-navigation-pill"></div></label>
+            {{ end }}
+            <label class="mobile-navigation-label"><input type="checkbox" class="mobile-navigation-page-links-input" autocomplete="on"><div class="hamburger-icon"></div></label>
+        </div>
+
+        <div class="mobile-navigation-page-links hide-scrollbars">
+            {{ template "navigation-links" . }}
+        </div>
+
+        <div class="mobile-navigation-actions flex flex-column margin-block-10">
+            {{ if not .App.Config.Theme.DisablePicker }}
+            <div class="theme-picker flex justify-between items-center" data-popover-type="html" data-popover-position="above" data-popover-show-delay="0" data-popover-hide-delay="100" data-popover-anchor=".current-theme-preview" data-popover-trigger="click">
+                <div data-popover-html>
+                    <div class="theme-choices">
+                        {{ .App.Config.Theme.PreviewHTML }}
+                        {{ range $_, $preset := .App.Config.Theme.Presets.Items }}
+                        {{ $preset.PreviewHTML }}
+                        {{ end }}
+                    </div>
+                </div>
+
+                <div class="size-h3 pointer-events-none select-none">Change theme</div>
+
+                <div class="flex gap-15 items-center pointer-events-none">
+                    <div class="current-theme-preview">
+                        {{ .Request.Theme.PreviewHTML }}
+                    </div>
+                    <svg class="ui-icon" stroke="var(--color-text-subdue)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.098 19.902a3.75 3.75 0 0 0 5.304 0l6.401-6.402M6.75 21A3.75 3.75 0 0 1 3 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 0 0 3.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008Z" />
+                    </svg>
+                </div>
+            </div>
+            {{ end }}
+
+            {{ if .App.RequiresAuth }}
+            <a href="{{ .App.Config.Server.BaseURL }}/logout" class="flex justify-between items-center">
+                <div class="size-h3">Logout</div>
+                <svg class="ui-icon" stroke="var(--color-text-subdue)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                </svg>
+            </a>
+            {{ end }}
+        </div>
+    </div>
+
+    <div class="content-bounds grow{{ if .Page.Width }} content-bounds-{{ .Page.Width }}{{ end }}">
+        <main class="page{{ if .Page.CenterVertically }} center-vertically{{ end }}" id="page" aria-live="polite" aria-busy="true">
+            <h1 class="visually-hidden">{{ .Page.Title }}</h1>
+            <div class="page-content" id="page-content"></div>
+            <div class="page-loading-container">
+                <div class="visually-hidden">Loading</div>
+                <div class="loading-icon" aria-hidden="true"></div>
+            </div>
+        </main>
+    </div>
+
+    {{ template "footer.html" . }}
+    <div class="mobile-navigation-offset"></div>
+</div>
+{{ end }}

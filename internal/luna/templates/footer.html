@@ -1,0 +1,11 @@
+{{ if not .App.Config.Branding.HideFooter }}
+<footer class="footer flex items-center flex-column">
+{{ if eq "" .App.Config.Branding.CustomFooter }}
+    <div>
+        <a class="size-h3" href="https://github.com/luna-page/luna" target="_blank" rel="noreferrer">Luna</a> {{ if ne "dev" .App.Version }}<a class="visited-indicator" title="Release notes" href="https://github.com/luna-page/luna/releases/tag/{{ .App.Version }}" target="_blank" rel="noreferrer">{{ .App.Version }}</a>{{ else }}({{ .App.Version }}){{ end }}
+    </div>
+{{ else }}
+    {{ .App.Config.Branding.CustomFooter }}
+{{ end }}
+</footer>
+{{ end }}
