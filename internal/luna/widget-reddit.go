@@ -304,11 +304,11 @@ func (widget *redditWidget) notifyOnNewPosts(posts forumPostList) {
 
 	widget.PrevPostIDs = currentIDs
 
-	if previousIDs == nil || !widget.Notifications || !notificationsEnabledForWidget("reddit") {
+	if previousIDs == nil || !widget.Notifications || !NotificationsEnabledForWidget("reddit") {
 		return
 	}
 
-	if !stringSetChanged(previousIDs, currentIDs) {
+	if !StringSetChanged(previousIDs, currentIDs) {
 		return
 	}
 
@@ -331,7 +331,7 @@ func (widget *redditWidget) notifyOnNewPosts(posts forumPostList) {
 		body = strings.Join(lines, "\n")
 	}
 
-	sendWidgetNotification("reddit", "Reddit: "+widget.Title, body, "info")
+	SendWidgetNotification("reddit", "Reddit: "+widget.Title, body, "info")
 }
 
 func (widget *redditWidget) fetchNewAppAccessToken() error {

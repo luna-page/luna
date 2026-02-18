@@ -212,11 +212,11 @@ func (widget *rssWidget) notifyOnNewItems(items rssFeedItemList) {
 
 	widget.PrevItemLinks = currentLinks
 
-	if previousLinks == nil || !widget.Notifications || !notificationsEnabledForWidget("rss") {
+	if previousLinks == nil || !widget.Notifications || !NotificationsEnabledForWidget("rss") {
 		return
 	}
 
-	if !stringSetChanged(previousLinks, currentLinks) {
+	if !StringSetChanged(previousLinks, currentLinks) {
 		return
 	}
 
@@ -235,7 +235,7 @@ func (widget *rssWidget) notifyOnNewItems(items rssFeedItemList) {
 		body = strings.Join(lines, "\n")
 	}
 
-	sendWidgetNotification("rss", "RSS: "+widget.Title, body, "info")
+	SendWidgetNotification("rss", "RSS: "+widget.Title, body, "info")
 }
 
 func (widget *rssWidget) fetchItemsFromFeedTask(request rssFeedRequest) ([]rssFeedItem, error) {

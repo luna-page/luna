@@ -238,11 +238,11 @@ func (widget *videosWidget) notifyOnNewVideos(videos videoList) {
 
 	widget.PrevVideoURLs = currentURLs
 
-	if previousURLs == nil || !widget.Notifications || !notificationsEnabledForWidget("videos") {
+	if previousURLs == nil || !widget.Notifications || !NotificationsEnabledForWidget("videos") {
 		return
 	}
 
-	if !stringSetChanged(previousURLs, currentURLs) {
+	if !StringSetChanged(previousURLs, currentURLs) {
 		return
 	}
 
@@ -261,5 +261,5 @@ func (widget *videosWidget) notifyOnNewVideos(videos videoList) {
 		body = strings.Join(lines, "\n")
 	}
 
-	sendWidgetNotification("videos", "YouTube: "+widget.Title, body, "info")
+	SendWidgetNotification("videos", "YouTube: "+widget.Title, body, "info")
 }

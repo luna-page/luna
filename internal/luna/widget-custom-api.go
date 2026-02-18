@@ -101,7 +101,7 @@ func (widget *customAPIWidget) update(ctx context.Context) {
 			if widget.CustomAPIRequest != nil && widget.CustomAPIRequest.URL != "" {
 				body = body + "\nURL: " + widget.CustomAPIRequest.URL
 			}
-			sendWidgetNotification("custom-api", "Custom API: "+widget.Title, body, "info")
+			SendWidgetNotification("custom-api", "Custom API: "+widget.Title, body, "info")
 		}
 	}
 }

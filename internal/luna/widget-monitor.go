@@ -130,7 +130,7 @@ func (widget *monitorWidget) update(ctx context.Context) {
 					body = body + " (" + status.Error.Error() + ")"
 				}
 
-				sendWidgetNotification("monitor", title, body, notifyType)
+				SendWidgetNotification("monitor", title, body, notifyType)
 			}
 		}
 

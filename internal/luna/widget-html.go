@@ -18,7 +18,7 @@ func (widget *htmlWidget) initialize() error {
 
 func (widget *htmlWidget) Render() template.HTML {
 	result := string(widget.Source)
-	if widget.Notifications && notificationsEnabledForWidget(widget.Type) && shouldUseGenericNotifications(widget.Type) {
+	if widget.Notifications && NotificationsEnabledForWidget(widget.Type) && ShouldUseGenericNotifications(widget.Type) {
 		if widget.lastRenderedHTML != "" && widget.lastRenderedHTML != result {
 			displayTitle := widget.Title
 			if strings.TrimSpace(displayTitle) == "" {
@@ -28,7 +28,7 @@ func (widget *htmlWidget) Render() template.HTML {
 			if strings.TrimSpace(widget.TitleURL) != "" {
 				body = body + "\nURL: " + widget.TitleURL
 			}
-			sendWidgetNotification(widget.Type, "Widget: "+displayTitle, body, "info")
+			SendWidgetNotification(widget.Type, "Widget: "+displayTitle, body, "info")
 		}
 		widget.lastRenderedHTML = result
 	}
