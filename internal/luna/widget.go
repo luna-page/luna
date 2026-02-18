@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"math"
 	"net/http"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -152,6 +153,7 @@ type widgetBase struct {
 	Type                string           `yaml:"type"`
 	Title               string           `yaml:"title"`
 	TitleURL            string           `yaml:"title-url"`
+	Notifications       bool             `yaml:"notifications"`
 	HideHeader          bool             `yaml:"hide-header"`
 	CSSClass            string           `yaml:"css-class"`
 	CustomCacheDuration durationField    `yaml:"cache"`
@@ -164,6 +166,7 @@ type widgetBase struct {
 	cacheType           cacheType        `yaml:"-"`
 	nextUpdate          time.Time        `yaml:"-"`
 	updateRetriedTimes  int              `yaml:"-"`
+	lastRenderedHTML    string           `yaml:"-"`
 }
 
 type widgetProviders struct {
@@ -237,7 +240,23 @@ func (w *widgetBase) renderTemplate(data any, t *template.Template) template.HTM
 		}
 	}
 
-	return template.HTML(w.templateBuffer.String())
+	result := w.templateBuffer.String()
+	if err == nil && w.Notifications && notificationsEnabledForWidget(w.Type) && shouldUseGenericNotifications(w.Type) {
+		if w.lastRenderedHTML != "" && w.lastRenderedHTML != result {
+			displayTitle := w.Title
+			if strings.TrimSpace(displayTitle) == "" {
+				displayTitle = w.Type
+			}
+			body := "Widget content changed."
+			if strings.TrimSpace(w.TitleURL) != "" {
+				body = body + "\nURL: " + w.TitleURL
+			}
+			sendWidgetNotification(w.Type, "Widget: "+displayTitle, body, "info")
+		}
+		w.lastRenderedHTML = result
+	}
+
+	return template.HTML(result)
 }
 
 func (w *widgetBase) withTitle(title string) *widgetBase {

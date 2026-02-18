@@ -86,6 +86,7 @@ func (widget *customAPIWidget) update(ctx context.Context) {
 
 	// Detect content change for live-events
 	if widget.CompiledHTML != compiledHTML {
+		previousHTML := widget.CompiledHTML
 		widget.PrevCompiledHTML = widget.CompiledHTML
 		widget.CompiledHTML = compiledHTML
 
@@ -94,6 +95,14 @@ func (widget *customAPIWidget) update(ctx context.Context) {
 			"widget_id": widget.GetID(),
 			"title":     widget.Title,
 		})
+
+		if previousHTML != "" && widget.Notifications {
+			body := "Widget data changed."
+			if widget.CustomAPIRequest != nil && widget.CustomAPIRequest.URL != "" {
+				body = body + "\nURL: " + widget.CustomAPIRequest.URL
+			}
+			sendWidgetNotification("custom-api", "Custom API: "+widget.Title, body, "info")
+		}
 	}
 }
 

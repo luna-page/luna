@@ -41,6 +41,7 @@ type rssWidget struct {
 
 	Items          rssFeedItemList `yaml:"-"`
 	NoItemsMessage string          `yaml:"-"`
+	PrevItemLinks  map[string]struct{} `yaml:"-"`
 
 	cachedFeedsMutex sync.Mutex
 	cachedFeeds      map[string]*cachedRSSFeed `yaml:"-"`
@@ -91,6 +92,8 @@ func (widget *rssWidget) update(ctx context.Context) {
 	if len(items) > widget.Limit {
 		items = items[:widget.Limit]
 	}
+
+	widget.notifyOnNewItems(items)
 
 	widget.Items = items
 }
@@ -187,6 +190,52 @@ func (widget *rssWidget) fetchItemsFromFeeds() (rssFeedItemList, error) {
 	}
 
 	return entries, nil
+}
+
+func (widget *rssWidget) notifyOnNewItems(items rssFeedItemList) {
+	previousLinks := widget.PrevItemLinks
+	currentLinks := make(map[string]struct{}, len(items))
+	newItems := make([]rssFeedItem, 0, len(items))
+
+	for i := range items {
+		link := items[i].Link
+		if link == "" {
+			continue
+		}
+		currentLinks[link] = struct{}{}
+		if previousLinks != nil {
+			if _, exists := previousLinks[link]; !exists {
+				newItems = append(newItems, items[i])
+			}
+		}
+	}
+
+	widget.PrevItemLinks = currentLinks
+
+	if previousLinks == nil || !widget.Notifications || !notificationsEnabledForWidget("rss") {
+		return
+	}
+
+	if !stringSetChanged(previousLinks, currentLinks) {
+		return
+	}
+
+	body := "RSS feed updated."
+	if len(newItems) > 0 {
+		maxItems := min(3, len(newItems))
+		lines := make([]string, 0, maxItems+1)
+		lines = append(lines, fmt.Sprintf("%d new RSS item(s)", len(newItems)))
+		for i := 0; i < maxItems; i++ {
+			line := "- " + newItems[i].Title
+			if newItems[i].Link != "" {
+				line = line + " (" + newItems[i].Link + ")"
+			}
+			lines = append(lines, line)
+		}
+		body = strings.Join(lines, "\n")
+	}
+
+	sendWidgetNotification("rss", "RSS: "+widget.Title, body, "info")
 }
 
 func (widget *rssWidget) fetchItemsFromFeedTask(request rssFeedRequest) ([]rssFeedItem, error) {

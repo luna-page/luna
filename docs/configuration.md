@@ -97,6 +97,8 @@ If you need to use the syntax `${NAME}` in your config without it being interpre
 something: \${NOT_AN_ENV_VAR}
 ```
 
+If a `.env` file exists in the working directory, luna will load it on startup and use those values as environment variables (without overriding values already set by the OS or container runtime).
+
 #### Other ways of providing tokens/passwords/secrets
 
 You can use [Docker secrets](https://docs.docker.com/compose/how-tos/use-secrets/) with the following syntax:
@@ -705,6 +707,7 @@ pages:
 | type | string | yes |
 | title | string | no |
 | title-url | string | no |
+| notifications | boolean | no | false |
 | hide-header | boolean | no | false |
 | cache | string | no |
 | css-class | string | no |
@@ -717,6 +720,9 @@ The title of the widget. If left blank it will be defined by the widget.
 
 #### `title-url`
 The URL to go to when clicking on the widget's title. If left blank it will be defined by the widget (if available).
+
+#### `notifications`
+Enable Apprise notifications for the widget (see the **Notifications (Apprise)** section below for env configuration and supported widgets).
 
 #### `hide-header`
 When set to `true`, the header (title) of the widget will be hidden. You cannot hide the header of the group widget.
@@ -741,6 +747,48 @@ cache: 1d  # 1 day
 
 #### `css-class`
 Set custom CSS classes for the specific widget instance.
+
+### Notifications (Apprise)
+Luna can send notifications via an Apprise API server. Notifications are opt-in per widget (or per monitor site) and are also controlled by environment variables. All widget types are supported.
+
+`NOTIFY_ALL` enables notifications globally. If a widget-specific `NOTIFY_<WIDGET_TYPE>` is set, it overrides `NOTIFY_ALL` for that widget.
+
+#### `.env` / environment configuration
+```env
+# Your Apprise API endpoint
+APPRISE_URL=http://apprise-api:8000/notify/
+
+# Notification providers (comma-separated)
+APPRISE_PROVIDERS=tgram://bottoken/ChatID,discord://webhookid/token
+
+# Filter by widget type (1 = enabled, 0 = disabled)
+NOTIFY_ALL=0
+NOTIFY_MONITOR=1
+NOTIFY_RSS=0
+NOTIFY_REDDIT=0
+NOTIFY_YOUTUBE=1
+NOTIFY_CUSTOM_API=0
+
+# Other widgets follow the pattern: NOTIFY_<WIDGET_TYPE>
+# (hyphens become underscores)
+# Example: NOTIFY_DOCKER_CONTAINERS=1
+```
+
+#### Widget configuration example
+```yaml
+- type: monitor
+  title: Services
+  sites:
+    - title: Proxmox Node
+      url: https://192.168.1.10
+      notifications: true
+
+- type: rss
+  title: News
+  notifications: true
+  feeds:
+    - url: https://example.com/rss
+```
 
 ### RSS
 Display a list of articles from multiple RSS feeds.
@@ -1959,6 +2007,7 @@ Properties for each site:
 | Name | Type | Required | Default |
 | ---- | ---- | -------- | ------- |
 | title | string | yes | |
+| name | string | no | |
 | url | string | yes | |
 | check-url | string | no | |
 | error-url | string | no | |
@@ -1968,10 +2017,15 @@ Properties for each site:
 | same-tab | boolean | no | false |
 | alt-status-codes | array | no | |
 | basic-auth | object | no | |
+| notifications | boolean | no | false |
 
 `title`
 
 The title used to indicate the site.
+
+`name`
+
+Alias for `title`.
 
 `url`
 
@@ -2009,6 +2063,10 @@ Status codes other than 200 that you want to return "OK".
 alt-status-codes:
   - 403
 ```
+
+`notifications`
+
+When set to `true`, sends a notification on state changes for this site (requires Apprise env configuration).
 
 `basic-auth`
 

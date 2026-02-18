@@ -21,6 +21,7 @@ var (
 type redditWidget struct {
 	widgetBase          `yaml:",inline"`
 	Posts               forumPostList     `yaml:"-"`
+	PrevPostIDs         map[string]struct{} `yaml:"-"`
 	Subreddit           string            `yaml:"subreddit"`
 	Proxy               proxyOptionsField `yaml:"proxy"`
 	Style               string            `yaml:"style"`
@@ -105,6 +106,8 @@ func (widget *redditWidget) update(ctx context.Context) {
 		posts.calculateEngagement()
 		posts.sortByEngagement()
 	}
+
+	widget.notifyOnNewPosts(posts)
 
 	widget.Posts = posts
 }
@@ -239,6 +242,7 @@ func (widget *redditWidget) fetchSubredditPosts() (forumPostList, error) {
 		}
 
 		forumPost := forumPost{
+			ID:              post.Id,
 			Title:           html.UnescapeString(post.Title),
 			DiscussionUrl:   commentsUrl,
 			TargetUrlDomain: post.Domain,
@@ -278,6 +282,56 @@ func (widget *redditWidget) fetchSubredditPosts() (forumPostList, error) {
 	}
 
 	return posts, nil
+}
+
+func (widget *redditWidget) notifyOnNewPosts(posts forumPostList) {
+	previousIDs := widget.PrevPostIDs
+	currentIDs := make(map[string]struct{}, len(posts))
+	newPosts := make([]forumPost, 0, len(posts))
+
+	for i := range posts {
+		id := posts[i].ID
+		if id == "" {
+			continue
+		}
+		currentIDs[id] = struct{}{}
+		if previousIDs != nil {
+			if _, exists := previousIDs[id]; !exists {
+				newPosts = append(newPosts, posts[i])
+			}
+		}
+	}
+
+	widget.PrevPostIDs = currentIDs
+
+	if previousIDs == nil || !widget.Notifications || !notificationsEnabledForWidget("reddit") {
+		return
+	}
+
+	if !stringSetChanged(previousIDs, currentIDs) {
+		return
+	}
+
+	body := "Reddit feed updated."
+	if len(newPosts) > 0 {
+		maxItems := min(3, len(newPosts))
+		lines := make([]string, 0, maxItems+1)
+		lines = append(lines, fmt.Sprintf("%d new Reddit post(s)", len(newPosts)))
+		for i := 0; i < maxItems; i++ {
+			line := "- " + newPosts[i].Title
+			url := newPosts[i].TargetUrl
+			if url == "" {
+				url = newPosts[i].DiscussionUrl
+			}
+			if url != "" {
+				line = line + " (" + url + ")"
+			}
+			lines = append(lines, line)
+		}
+		body = strings.Join(lines, "\n")
+	}
+
+	sendWidgetNotification("reddit", "Reddit: "+widget.Title, body, "info")
 }
 
 func (widget *redditWidget) fetchNewAppAccessToken() error {

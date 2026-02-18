@@ -6,3 +6,4 @@
 luna
 luna.exe
 *.log
+.env

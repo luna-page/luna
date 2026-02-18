@@ -13,6 +13,10 @@ import (
 var buildVersion = "dev"
 
 func Main() int {
+	if err := loadDotEnvIfExists(".env"); err != nil {
+		fmt.Printf("Warning: failed to load .env file: %v\n", err)
+	}
+
 	options, err := parseCliOptions()
 	if err != nil {
 		fmt.Println(err)

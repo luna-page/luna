@@ -24,11 +24,13 @@ type monitorWidget struct {
 		URL                string          `yaml:"-"`
 		ErrorURL           string          `yaml:"error-url"`
 		Title              string          `yaml:"title"`
+		Name               string          `yaml:"name"`
 		Icon               customIconField `yaml:"icon"`
 		SameTab            bool            `yaml:"same-tab"`
 		StatusText         string          `yaml:"-"`
 		StatusStyle        string          `yaml:"-"`
 		AltStatusCodes     []int           `yaml:"alt-status-codes"`
+		Notifications      bool            `yaml:"notifications"`
 	} `yaml:"sites"`
 	Style           string `yaml:"style"`
 	ShowFailingOnly bool   `yaml:"show-failing-only"`
@@ -37,6 +39,12 @@ type monitorWidget struct {
 
 func (widget *monitorWidget) initialize() error {
 	widget.withTitle("Monitor").withCacheDuration(5 * time.Minute)
+
+	for i := range widget.Sites {
+		if widget.Sites[i].Title == "" && widget.Sites[i].Name != "" {
+			widget.Sites[i].Title = widget.Sites[i].Name
+		}
+	}
 
 	return nil
 }
@@ -96,6 +104,34 @@ func (widget *monitorWidget) update(ctx context.Context) {
 			}
 
 			publishEvent("monitor:site_changed", payload)
+
+			shouldNotify := widget.Notifications || site.Notifications
+			if shouldNotify {
+				notifyType := "info"
+				isFailure := status.TimedOut || status.Error != nil || (!slices.Contains(site.AltStatusCodes, status.Code) && status.Code >= 400)
+				if isFailure {
+					notifyType = "failure"
+				} else {
+					notifyType = "success"
+				}
+
+				oldStatusText := "unknown"
+				if old != nil {
+					oldStatusText = statusCodeToText(old.Code, site.AltStatusCodes)
+				}
+
+				newStatusText := statusCodeToText(status.Code, site.AltStatusCodes)
+				title := "Monitor: " + site.Title
+				body := "Status changed from " + oldStatusText + " to " + newStatusText + " for " + site.DefaultURL
+				if status.Code != 0 {
+					body = body + " (status " + strconv.Itoa(status.Code) + ")"
+				}
+				if status.Error != nil {
+					body = body + " (" + status.Error.Error() + ")"
+				}
+
+				sendWidgetNotification("monitor", title, body, notifyType)
+			}
 		}
 
 		// remember previous status

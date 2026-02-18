@@ -23,6 +23,7 @@ var (
 type videosWidget struct {
 	widgetBase        `yaml:",inline"`
 	Videos            videoList `yaml:"-"`
+	PrevVideoURLs     map[string]struct{} `yaml:"-"`
 	VideoUrlTemplate  string    `yaml:"video-url-template"`
 	Style             string    `yaml:"style"`
 	CollapseAfter     int       `yaml:"collapse-after"`
@@ -73,6 +74,8 @@ func (widget *videosWidget) update(ctx context.Context) {
 	if len(videos) > widget.Limit {
 		videos = videos[:widget.Limit]
 	}
+
+	widget.notifyOnNewVideos(videos)
 
 	widget.Videos = videos
 }
@@ -213,4 +216,50 @@ func fetchYoutubeChannelUploads(channelOrPlaylistIDs []string, videoUrlTemplate 
 	}
 
 	return videos, nil
+}
+
+func (widget *videosWidget) notifyOnNewVideos(videos videoList) {
+	previousURLs := widget.PrevVideoURLs
+	currentURLs := make(map[string]struct{}, len(videos))
+	newVideos := make([]video, 0, len(videos))
+
+	for i := range videos {
+		url := videos[i].Url
+		if url == "" {
+			continue
+		}
+		currentURLs[url] = struct{}{}
+		if previousURLs != nil {
+			if _, exists := previousURLs[url]; !exists {
+				newVideos = append(newVideos, videos[i])
+			}
+		}
+	}
+
+	widget.PrevVideoURLs = currentURLs
+
+	if previousURLs == nil || !widget.Notifications || !notificationsEnabledForWidget("videos") {
+		return
+	}
+
+	if !stringSetChanged(previousURLs, currentURLs) {
+		return
+	}
+
+	body := "YouTube feed updated."
+	if len(newVideos) > 0 {
+		maxItems := min(3, len(newVideos))
+		lines := make([]string, 0, maxItems+1)
+		lines = append(lines, fmt.Sprintf("%d new video(s)", len(newVideos)))
+		for i := 0; i < maxItems; i++ {
+			line := "- " + newVideos[i].Title
+			if newVideos[i].Url != "" {
+				line = line + " (" + newVideos[i].Url + ")"
+			}
+			lines = append(lines, line)
+		}
+		body = strings.Join(lines, "\n")
+	}
+
+	sendWidgetNotification("videos", "YouTube: "+widget.Title, body, "info")
 }
