@@ -1,0 +1,54 @@
+project_name: luna
+
+checksum:
+  disable: true
+
+builds:
+  - binary: luna
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X github.com/luna-page/luna/internal/luna.buildVersion={{ .Tag }}
+    main: ./main.go
+
+archives:
+  - name_template: "luna-{{ .Os }}-{{ .Arch }}"
+    files:
+      - nothing*
+    format_overrides:
+      - goos: windows
+        format: zip
+
+dockers:
+  - image_templates:
+      - &amd64_image "ghcr.io/luna-page/luna:{{ .Tag }}-amd64"
+    build_flag_templates:
+      - --platform=linux/amd64
+    goarch: amd64
+    use: buildx
+    dockerfile: Dockerfile.goreleaser
+
+  - image_templates:
+      - &arm64v8_image "ghcr.io/luna-page/luna:{{ .Tag }}-arm64"
+    build_flag_templates:
+      - --platform=linux/arm64
+    goarch: arm64
+    use: buildx
+    dockerfile: Dockerfile.goreleaser
+
+docker_manifests:
+  - name_template: "ghcr.io/luna-page/luna:{{ .Tag }}"
+    image_templates:
+      - *amd64_image
+      - *arm64v8_image
+  - name_template: "ghcr.io/luna-page/luna:latest"
+    image_templates:
+      - *amd64_image
+      - *arm64v8_image

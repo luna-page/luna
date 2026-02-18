@@ -1,0 +1,7 @@
+FROM alpine:3.21
+
+WORKDIR /app
+COPY luna .
+
+EXPOSE 8080/tcp
+ENTRYPOINT ["/app/luna", "--config", "/app/config/luna.yml"]
