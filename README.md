@@ -185,5 +185,61 @@ run:
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/luna-page/luna/main/ct/luna.sh)"
 ```
-** To update the lates build just type update.
+** To update the lates build just type `update`.
+
+## Building from source
+
+Choose one of the following methods:
+
+<details>
+<summary><strong>Build binary with Go</strong></summary>
+<br>
+
+Requirements: [Go](https://go.dev/dl/) >= v1.23
+
+To build the project for your current OS and architecture, run:
+
+```bash
+go build -o build/luna .
+```
+
+To build for a specific OS and architecture, run:
+
+```bash
+GOOS=linux GOARCH=amd64 go build -o build/luna .
+```
+
+[*click here for a full list of GOOS and GOARCH combinations*](https://go.dev/doc/install/source#:~:text=$GOOS%20and%20$GOARCH)
+
+Alternatively, if you just want to run the app without creating a binary, like when you're testing out changes, you can run:
+
+```bash
+go run .
+```
+<hr>
+</details>
+
+<details>
+<summary><strong>Build project and Docker image with Docker</strong></summary>
+<br>
+
+Requirements: [Docker](https://docs.docker.com/engine/install/)
+
+To build the project and image using just Docker, run:
+
+*(replace `owner` with your name or organization)*
+
+```bash
+docker build -t owner/luna:latest .
+```
+
+If you wish to push the image to a registry (by default Docker Hub), run:
+
+```bash
+docker push owner/luna:latest
+```
+
+<hr>
+</details>
+
 
