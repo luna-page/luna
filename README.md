@@ -20,6 +20,10 @@
 ![](docs/images/readme-main-image.png)
 
 ## Features
+### What's new in Luna
+* Real-time services, monitor status change
+* Notification  [read more]( docs/APPRISE_NOTIFICATIONS.md)
+* more to come..
 ### Various widgets
 * RSS feeds
 * Subreddit posts
@@ -56,11 +60,19 @@ Because you'll want to take it with you on the go.
 Easily create your own theme by tweaking a few numbers or choose from one of the [already available themes](docs/themes.md).
 
 ## Installation
-### Docker Install
+Choose one of the following methods:
+
+<details>
+<summary><strong>Docker container without Apprise Notification (if you already have Apprise)</strong></summary>
+
+
 Create a new directory called `config` and add [`luna.yml`](docs/luna.yml) file in the directory
+
+
 ```bash
 mkdir config && wget -O config/luna.yml https://raw.githubusercontent.com/luna-page/luna/refs/heads/main/docs/luna.yml
 ```
+
 
 ```yaml
 services:
@@ -81,6 +93,8 @@ services:
     environment:
       - TZ=Etc/UTC
       - luna_CONFIG=/app/luna.yml
+    env_file:
+      - ./.env
     # Important for SSE (Live Events) data flow
     logging:
       driver: "json-file"
@@ -88,9 +102,70 @@ services:
         max-size: "10mb"
         max-file: "3"
 ```
+
 ```bash
 docker compose up -d
 ```
+<br>
+</details>
+
+<details>
+<summary><strong>Docker container with Apprise Notification</strong></summary>
+
+
+Create a new directory called `config` and add [`luna.yml`](docs/luna.yml) file in the directory
+
+
+```bash
+mkdir config && wget -O config/luna.yml https://raw.githubusercontent.com/luna-page/luna/refs/heads/main/docs/luna.yml
+```
+
+
+```yaml
+services:
+  apprise:
+    image: linuxserver/apprise:latest
+    container_name: apprise-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - TZ=Etc/UTC
+
+  luna:
+    image: ghcr.io/luna-page/luna:main
+    container_name: luna
+    restart: unless-stopped
+    # If you need luna to see services running directly on the host (e.g. DNS on port 53)
+      # you can use network_mode: host or add-host
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config:/app/config:ro # add luna.yml to config folder
+      # If you have custom assets (CSS/JS) that you want to test without rebuilding
+      # - ./public:/app/public:ro
+      # Optionally, also mount docker socket if you want to use the docker containers widget
+      # - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - TZ=Etc/UTC
+      - luna_CONFIG=/app/luna.yml
+    env_file:
+      - ./.env
+    # Important for SSE (Live Events) data flow
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10mb"
+        max-file: "3"
+```
+
+```bash
+docker compose up -d
+```
+<br>
+</details>
+
+
 If you encounter any issues, you can check the logs by running:
 
 ```bash
