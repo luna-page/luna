@@ -26,6 +26,12 @@ NOTIFY_REDDIT=0
 NOTIFY_YOUTUBE=1
 NOTIFY_CUSTOM_API=0
 NOTIFY_DOCKER_CONTAINERS=0
+# Optional duplicate suppression window in seconds
+# (identical notification title/body/type per widget is dropped during this period)
+NOTIFY_COOLDOWN=120
+# Optional global toggle for generic "Widget content changed" alerts
+# (widget-specific notifications like monitor/rss/reddit/videos/custom-api are unaffected)
+NOTIFY_GENERIC=0
 # ... other widgets follow NOTIFY_<WIDGET_TYPE> pattern (hyphens → underscores)
 ```
 
@@ -60,6 +66,8 @@ Enable notifications at widget or monitor-site level:
 Any change in rendered content (HTML) triggers a notification:
 - Message: `"Widget: <title>" "Widget content changed. URL: <title-url>"`
 - Applies to: calendar, weather, clock, bookmarks, extension, etc.
+- Excludes widgets with dedicated logic and high-frequency metric widgets (`monitor`, `rss`, `reddit`, `videos`, `custom-api`, `server-stats`)
+- Can be globally disabled with `NOTIFY_GENERIC=0`
 - Only notifies on actual changes, not on first load
 
 #### Monitor
@@ -165,7 +173,7 @@ services:
 - **Env vars loaded at startup:** Changes to `.env` require Luna restart
 - **No duplicate notifications:** Widgets with custom logic (monitor, RSS, etc.) don't trigger generic notifications
 - **First load safe:** Initial widget state doesn't trigger notifications
-- **Rate limiting:** None (Apprise handles rate limiting per service)
+- **Duplicate suppression:** Optional app-side cooldown via `NOTIFY_COOLDOWN` (seconds)
 - **Async sending:** Notifications sent asynchronously to avoid blocking widget updates
 - **Failure handling:** Notification failures log but don't fail widget updates
 

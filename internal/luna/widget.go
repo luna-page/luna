@@ -167,6 +167,7 @@ type widgetBase struct {
 	nextUpdate          time.Time        `yaml:"-"`
 	updateRetriedTimes  int              `yaml:"-"`
 	lastRenderedHTML    string           `yaml:"-"`
+	notificationPending bool             `yaml:"-"`
 }
 
 type widgetProviders struct {
@@ -241,7 +242,7 @@ func (w *widgetBase) renderTemplate(data any, t *template.Template) template.HTM
 	}
 
 	result := w.templateBuffer.String()
-	if err == nil && w.Notifications && NotificationsEnabledForWidget(w.Type) && ShouldUseGenericNotifications(w.Type) {
+	if err == nil && w.notificationPending && w.Notifications && NotificationsEnabledForWidget(w.Type) && GenericNotificationsEnabled() && ShouldUseGenericNotifications(w.Type) {
 		if w.lastRenderedHTML != "" && w.lastRenderedHTML != result {
 			displayTitle := w.Title
 			if strings.TrimSpace(displayTitle) == "" {
@@ -254,6 +255,10 @@ func (w *widgetBase) renderTemplate(data any, t *template.Template) template.HTM
 			SendWidgetNotification(w.Type, "Widget: "+displayTitle, body, "info")
 		}
 		w.lastRenderedHTML = result
+		w.notificationPending = false
+	} else if err == nil && w.notificationPending {
+		w.lastRenderedHTML = result
+		w.notificationPending = false
 	}
 
 	return template.HTML(result)
@@ -340,6 +345,7 @@ func (w *widgetBase) canContinueUpdateAfterHandlingErr(err error) bool {
 	w.withNotice(nil)
 	w.withError(nil)
 	w.scheduleNextUpdate()
+	w.notificationPending = true
 	return true
 }
 

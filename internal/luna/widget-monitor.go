@@ -106,7 +106,7 @@ func (widget *monitorWidget) update(ctx context.Context) {
 			publishEvent("monitor:site_changed", payload)
 
 			shouldNotify := widget.Notifications || site.Notifications
-			if shouldNotify {
+			if shouldNotify && monitorStateChanged(old, status, site.AltStatusCodes) {
 				notifyType := "info"
 				isFailure := status.TimedOut || status.Error != nil || (!slices.Contains(site.AltStatusCodes, status.Code) && status.Code >= 400)
 				if isFailure {
@@ -151,6 +151,34 @@ func (widget *monitorWidget) update(ctx context.Context) {
 		site.StatusText = statusCodeToText(status.Code, site.AltStatusCodes)
 		site.StatusStyle = statusCodeToStyle(status.Code, site.AltStatusCodes)
 	}
+}
+
+func monitorStateChanged(previous *siteStatus, current *siteStatus, altStatusCodes []int) bool {
+	if previous == nil || current == nil {
+		return false
+	}
+
+	return monitorStateKey(previous, altStatusCodes) != monitorStateKey(current, altStatusCodes)
+}
+
+func monitorStateKey(status *siteStatus, altStatusCodes []int) string {
+	if status == nil {
+		return "unknown"
+	}
+
+	if status.TimedOut || status.Error != nil {
+		return "error"
+	}
+
+	if status.Code == 200 || slices.Contains(altStatusCodes, status.Code) {
+		return "ok"
+	}
+
+	if status.Code >= 400 {
+		return "error"
+	}
+
+	return "other"
 }
 
 func (widget *monitorWidget) Render() template.HTML {

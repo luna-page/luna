@@ -10,12 +10,16 @@ pages:
             format: "HH:mm"
             timezone: "UTC"
           - type: calendar
+          - type: server-stats
+            servers:
+              - type: local
+                name: Services
+            notifications: true
 
       - size: full
         widgets:
           - type: search
             autofocus: true
-
           - type: monitor
             cache: 1m
             title: Services
@@ -23,21 +27,27 @@ pages:
               - title: Cloudflare
                 url: https://cloudflare.com
                 icon: si:cloudflare
+                notifications: true
               - title: Gitea
                 url: https://about.gitea.com/
                 icon: si:gitea
+                notifications: true
               - title: qBittorrent # only for Linux ISOs, of course
-                url: https://www.qbittorrent.org/
+                url: https://qbittorrent.org/
                 icon: si:qbittorrent
+                notifications: true
               - title: Immich
                 url: https://immich.app/
                 icon: si:immich
+                notifications: true
               - title: AdGuard Home
                 url: https://adguard.com/
                 icon: si:adguard
+                notifications: true
               - title: Vaultwarden
                 url: https://www.vaultwarden.net/
                 icon: si:vaultwarden
+                notifications: true
           - type: bookmarks
             groups:
               - title: General

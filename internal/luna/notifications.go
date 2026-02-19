@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -15,18 +16,29 @@ import (
 type notificationSettings struct {
 	AppriseURL string
 	Providers  string
+	Cooldown   time.Duration
 }
 
 var (
 	notificationSettingsOnce   sync.Once
 	notificationSettingsCached notificationSettings
+	notificationHistoryMu      sync.Mutex
+	notificationHistory        = make(map[string]time.Time)
 )
 
 func getNotificationSettings() notificationSettings {
 	notificationSettingsOnce.Do(func() {
+		cooldownSeconds := 0
+		if raw := strings.TrimSpace(os.Getenv("NOTIFY_COOLDOWN")); raw != "" {
+			if parsed, err := strconv.Atoi(raw); err == nil && parsed > 0 {
+				cooldownSeconds = parsed
+			}
+		}
+
 		notificationSettingsCached = notificationSettings{
 			AppriseURL: strings.TrimSpace(os.Getenv("APPRISE_URL")),
 			Providers:  strings.TrimSpace(os.Getenv("APPRISE_PROVIDERS")),
+			Cooldown:   time.Duration(cooldownSeconds) * time.Second,
 		}
 	})
 
@@ -86,11 +98,20 @@ func notificationEnvVarForWidget(widgetType string) string {
 
 func ShouldUseGenericNotifications(widgetType string) bool {
 	switch widgetType {
-	case "monitor", "rss", "reddit", "videos", "custom-api":
+	case "monitor", "rss", "reddit", "videos", "custom-api", "server-stats":
 		return false
 	default:
 		return true
 	}
+}
+
+func GenericNotificationsEnabled() bool {
+	value, found := os.LookupEnv("NOTIFY_GENERIC")
+	if !found {
+		return true
+	}
+
+	return parseEnvBool(value)
 }
 
 func StringSetChanged(previous, current map[string]struct{}) bool {
@@ -113,6 +134,27 @@ func SendWidgetNotification(widgetType string, title string, body string, notify
 	settings := getNotificationSettings()
 	if settings.AppriseURL == "" || settings.Providers == "" {
 		return
+	}
+
+	if settings.Cooldown > 0 {
+		now := time.Now()
+		key := widgetType + "|" + title + "|" + body + "|" + notifyType
+
+		notificationHistoryMu.Lock()
+		if lastSentAt, exists := notificationHistory[key]; exists {
+			if now.Sub(lastSentAt) < settings.Cooldown {
+				notificationHistoryMu.Unlock()
+				return
+			}
+		}
+		notificationHistory[key] = now
+
+		for existingKey, sentAt := range notificationHistory {
+			if now.Sub(sentAt) >= settings.Cooldown {
+				delete(notificationHistory, existingKey)
+			}
+		}
+		notificationHistoryMu.Unlock()
 	}
 
 	go func() {
