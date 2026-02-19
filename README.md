@@ -23,6 +23,7 @@
 ### What's new in Luna
 * Real-time services, monitor status change
 * Notification  [read more]( docs/APPRISE_NOTIFICATIONS.md)
+* Luna Agent has now support for Synology & Unraid [read more](https://github.com/luna-page/agent)
 * more to come..
 ### Various widgets
 * RSS feeds
