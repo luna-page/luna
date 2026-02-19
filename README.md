@@ -81,7 +81,8 @@ services:
     image: ghcr.io/luna-page/luna:main
     container_name: luna
     restart: unless-stopped
-    # If you need luna to see services running directly on the host (e.g. DNS on port 53) and to proper use the notification system
+    # If you need luna to see services running directly on the host (e.g. DNS on port 53),
+    # and to proper use the notification system
     network_mode: host  # port:8080 
     volumes:
       - ./config:/app/config:ro # add luna.yml to config folder
@@ -135,7 +136,8 @@ services:
     image: ghcr.io/luna-page/luna:main
     container_name: luna
     restart: unless-stopped
-    # If you need luna to see services running directly on the host (e.g. DNS on port 53) and to proper use the notification system
+    # If you need luna to see services running directly on the host (e.g. DNS on port 53),
+    # and to proper use the notification system
     network_mode: host  # port:8080 
     volumes:
       - ./config:/app/config:ro # add luna.yml to config folder
