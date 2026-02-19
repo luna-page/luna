@@ -157,6 +157,8 @@ services:
       options:
         max-size: "10mb"
         max-file: "3"
+    depends_on:
+      - apprise
 ```
 
 ```bash
