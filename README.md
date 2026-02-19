@@ -81,21 +81,19 @@ services:
     image: ghcr.io/luna-page/luna:main
     container_name: luna
     restart: unless-stopped
-    # If you need luna to see services running directly on the host (e.g. DNS on port 53)
-      # you can use network_mode: host or add-host
-    ports:
-      - "8080:8080"
+    # If you need luna to see services running directly on the host (e.g. DNS on port 53) and to proper use the notification system
+    network_mode: host  # port:8080 
     volumes:
       - ./config:/app/config:ro # add luna.yml to config folder
       # If you have custom assets (CSS/JS) that you want to test without rebuilding
-      # - ./public:/app/public:ro
+      # - ./assets:/app/assets:ro
       # Optionally, also mount docker socket if you want to use the docker containers widget
       # - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - TZ=Etc/UTC
       - luna_CONFIG=/app/luna.yml
     env_file:
-      - ./.env
+      - ./.env # create touch .env before deploy the container
     # Important for SSE (Live Events) data flow
     logging:
       driver: "json-file"
@@ -137,21 +135,19 @@ services:
     image: ghcr.io/luna-page/luna:main
     container_name: luna
     restart: unless-stopped
-    # If you need luna to see services running directly on the host (e.g. DNS on port 53)
-      # you can use network_mode: host or add-host
-    ports:
-      - "8080:8080"
+    # If you need luna to see services running directly on the host (e.g. DNS on port 53) and to proper use the notification system
+    network_mode: host  # port:8080 
     volumes:
       - ./config:/app/config:ro # add luna.yml to config folder
       # If you have custom assets (CSS/JS) that you want to test without rebuilding
-      # - ./public:/app/public:ro
+      # - ./assets:/app/assets:ro
       # Optionally, also mount docker socket if you want to use the docker containers widget
       # - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - TZ=Etc/UTC
       - luna_CONFIG=/app/luna.yml
     env_file:
-      - ./.env
+      - ./.env # create touch .env before deploy the container
     # Important for SSE (Live Events) data flow
     logging:
       driver: "json-file"
