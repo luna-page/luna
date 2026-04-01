@@ -144,6 +144,10 @@ func parseStooqCSV(r io.Reader) (map[string]stooqQuote, error) {
 		return nil, err
 	}
 
+	if len(records) <= 1 {
+		return nil, fmt.Errorf("no quote data in CSV response")
+	}
+
 	quotes := make(map[string]stooqQuote, len(records)-1)
 
 	for i, record := range records {
@@ -178,6 +182,10 @@ func parseStooqHistoricalCSV(r io.Reader) ([]float64, error) {
 	records, err := reader.ReadAll()
 	if err != nil {
 		return nil, err
+	}
+
+	if len(records) <= 1 {
+		return nil, fmt.Errorf("no historical data in CSV response")
 	}
 
 	prices := make([]float64, 0, len(records)-1)
